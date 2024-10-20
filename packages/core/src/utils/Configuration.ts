@@ -613,6 +613,7 @@ export interface MikroORMOptions<D extends IDatabaseDriver = IDatabaseDriver, EM
     createForeignKeyConstraints?: boolean;
     ignoreSchema?: string[];
     managementDbName?: string;
+    ignoreTables?: string[];
   };
   embeddables: {
     prefixMode: EmbeddedPrefixMode;

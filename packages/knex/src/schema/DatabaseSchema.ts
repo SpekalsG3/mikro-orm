@@ -78,7 +78,24 @@ export class DatabaseSchema {
     const parts = config.get('migrations').tableName!.split('.');
     const migrationsTableName = parts[1] ?? parts[0];
     const migrationsSchemaName = parts.length > 1 ? parts[0] : config.get('schema', platform.getDefaultSchemaName());
-    const tables = allTables.filter(t => t.table_name !== migrationsTableName || (t.schema_name && t.schema_name !== migrationsSchemaName));
+    let tables = allTables
+      .filter(t => t.table_name !== migrationsTableName || (t.schema_name && t.schema_name !== migrationsSchemaName));
+    const ignoreTables = config.get('schemaGenerator').ignoreTables
+      ?.map<Table>(t => {
+        let [schema, table]: (string | undefined)[] = t.split('.');
+        if (table === undefined) {
+          table = schema;
+          schema = undefined;
+        }
+        return {
+          table_name: table,
+          schema_name: schema,
+        };
+      });
+    if (ignoreTables) {
+      tables = tables
+        .filter(t => !ignoreTables.find(it => (it.table_name === '*' || it.table_name === t.table_name) && t.schema_name === it.schema_name));
+    }
     await platform.getSchemaHelper()!.loadInformationSchema(schema, connection, tables, schemas && schemas.length > 0 ? schemas : undefined);
 
     return schema;
